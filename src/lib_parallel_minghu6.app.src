@@ -1,0 +1,15 @@
+{application, lib_parallel_minghu6,
+ [{description, "An OTP library, a collection of parallel toys"},
+  {vsn, "0.1.1"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, ["lib_parallel"]},
+  {pkg_name, "lib_parallel"},
+  {maintainers, ["minghu6"]},
+  {licenses, ["Apache 2.0"]},
+  {links, [{"Github", "https://github.com/minghu6/lib_parallel"}]}
+ ]}.
