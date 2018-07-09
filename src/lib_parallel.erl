@@ -11,18 +11,13 @@ pmap(F, L, K) ->
     case Len > K of
       true ->
       {KT, Remain} = lists:split(K, L),
-      pmap(F, KT) ++ pmap(F, Remain, K);
+      pmap0(F, KT) ++ pmap(F, Remain, K);
       false -> pmap(F, L)
     end.
 
 pmap(F, L) ->
-    S = self(),
-    Ref = erlang:make_ref(),
-    Pids = lists:map(fun (I) ->
-                spawn_link(fun () -> do_f(S, Ref, F, I) end)
-             end,
-             L),
-    gather(Pids, Ref).
+    K = erlang:system_info(logical_processors_available) * 10,
+    pmap(F, L, K).
 
 pmap2(F, L) ->
     S = self(),
@@ -43,6 +38,15 @@ mapreduce(F1, F2, Acc0, L) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+pmap0(F, L) ->
+    S = self(),
+    Ref = erlang:make_ref(),
+    Pids = lists:map(fun (I) ->
+                spawn_link(fun () -> do_f(S, Ref, F, I) end)
+             end,
+             L),
+    gather(Pids, Ref).
+
 do_f(Parent, Ref, F, I) ->
     Parent ! {self(), Ref, catch F(I)}.
 
