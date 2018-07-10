@@ -1,32 +1,24 @@
 -module(lib_parallel).
 
 %% API exports
--export([mapreduce/4, pmap/2, pmap/3, pmap2/2]).
+-export([mapreduce/4, pmap/2, dpmap/2]).
 
 %%====================================================================
 %% API functions
 %%====================================================================
-pmap(F, L, K) ->
-    Len = length(L),
-    case Len > K of
-      true ->
-        {KT, Remain} = lists:split(K, L),
-        pmap0(F, KT) ++ pmap(F, Remain, K);
-      false -> pmap0(F, L)
-    end.
-
 pmap(F, L) ->
     K = erlang:system_info(logical_processors_available) * 10,
     pmap(F, L, K).
 
-pmap2(F, L) ->
+%% disorder parallel map
+dpmap(F, L) ->
     S = self(),
     Ref = erlang:make_ref(),
     lists:foreach(fun (I) ->
-              spawn_link(fun () -> do_f2(S, Ref, F, I) end)
+              spawn_link(fun () -> ddo_f2(S, Ref, F, I) end)
           end,
           L),
-    gather2(length(L), Ref, []).
+    dgather2(length(L), Ref, []).
 
 mapreduce(F1, F2, Acc0, L) ->
         Pid = spawn_link(fun() -> reduce(self(), F1, F2, Acc0, L) end),
@@ -38,6 +30,17 @@ mapreduce(F1, F2, Acc0, L) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+pmap(F, L, K) when L /= []->
+    {KT, Remain} = list_split(K, L),
+    pmap0(F, KT) ++ pmap(F, Remain, K);
+pmap(_, [], _) -> [].
+
+list_split(N, L) ->
+  try lists:split(N, L)
+  catch _:_->
+    {L, []}
+  end.
+
 pmap0(F, L) ->
     S = self(),
     Ref = erlang:make_ref(),
@@ -54,12 +57,12 @@ gather([Pid | T], Ref) ->
     receive {Pid, Ref, Ret} -> [Ret | gather(T, Ref)] end;
 gather([], _) -> [].
 
-do_f2(Parent, Ref, F, I) -> Parent ! {Ref, catch F(I)}.
+ddo_f2(Parent, Ref, F, I) -> Parent ! {Ref, catch F(I)}.
 
-gather2(0, _, L) -> L;
-gather2(N, Ref, L) ->
+dgather2(0, _, L) -> L;
+dgather2(N, Ref, L) ->
     receive
-      {Ref, Ret} -> gather2(N - 1, Ref, [Ret | L])
+      {Ref, Ret} -> dgather2(N - 1, Ref, [Ret | L])
     end.
 
     reduce(Parent, F1, F2, Acc0, L) ->
