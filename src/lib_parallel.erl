@@ -12,7 +12,7 @@ pmap(F, L, K) ->
       true ->
         {KT, Remain} = lists:split(K, L),
         pmap0(F, KT) ++ pmap(F, Remain, K);
-      false -> pmap(F, L)
+      false -> pmap0(F, L)
     end.
 
 pmap(F, L) ->

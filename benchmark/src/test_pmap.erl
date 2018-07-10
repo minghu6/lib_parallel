@@ -1,8 +1,7 @@
 -module(test_pmap).
 
-
-
 -compile(export_all).
+
 
 shuffle(List) -> shuffle(List, []).
 
