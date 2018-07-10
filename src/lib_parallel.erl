@@ -10,8 +10,8 @@ pmap(F, L, K) ->
     Len = length(L),
     case Len > K of
       true ->
-      {KT, Remain} = lists:split(K, L),
-      pmap0(F, KT) ++ pmap(F, Remain, K);
+        {KT, Remain} = lists:split(K, L),
+        pmap0(F, KT) ++ pmap(F, Remain, K);
       false -> pmap(F, L)
     end.
 
