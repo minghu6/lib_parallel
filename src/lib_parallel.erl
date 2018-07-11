@@ -30,10 +30,11 @@ mapreduce(F1, F2, Acc0, L) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
-pmap(F, L, K) when L /= []->
+pmap(_, [], _) -> [];
+pmap(F, L, K) ->
     {KT, Remain} = list_split(K, L),
-    pmap0(F, KT) ++ pmap(F, Remain, K);
-pmap(_, [], _) -> [].
+    pmap0(F, KT) ++ pmap(F, Remain, K).
+
 
 list_split(N, L) ->
   try lists:split(N, L)
